@@ -1,28 +1,22 @@
 package de.cyklon.discordchatexporter;
 
+import javax.crypto.Cipher;
+import java.awt.*;
+
 public final class DiscordHtml {
 
     private DiscordHtml() {}
 
-    private static final String COMMENT = """
-            <!--
-            This transcript was generated using: https://github.com/mahtoid/DiscordChatExporterPy
-            If you have any issues or suggestions - open an issue on the Github Repository or alternatively join discord.gg/2uhHBQDwcc        
-            -->
-           
-           
-            """;
+    private static String disabled(boolean disabled) {
+        return disabled ? "disabled" : "";
+    }
 
-    public static final String BASE = COMMENT + """                        
-            <!DOCTYPE html>
-            <html lang="en">
-                        
-            <head>
-                <title>{{SERVER_NAME}} - {{CHANNEL_NAME}}</title>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <meta name="viewport" content="width=device-width" />
-                        
-                <style>
+    private static String color(Color color) {
+        return String.format("rgba(%s,%s,%s,%s)", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()/255f);
+    }
+
+    private static final String style = """
+            <style>
                     @font-face {
                       font-family: gg sans;
                       font-weight: 400;
@@ -1036,7 +1030,7 @@ public final class DiscordHtml {
                         
                     .meta-popout.mounted {
                         transform: scale(1);
-                        transition: transform .3 ease-in-out;;
+                        transition: transform .3 ease-in-out;
                     }
                         
                     .meta__divider {
@@ -1268,347 +1262,371 @@ public final class DiscordHtml {
                         
                     .cursor_pointer { cursor: pointer; }
                         
-                </style>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-dark.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
-                <script src="https://unpkg.com/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
-                <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/customParseFormat.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isToday.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isTomorrow.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isBetween.js"></script>
-                        
-                <script>
-                    <!--  Scroll to Message (References)  -->
-                    function scrollToMessage(event, id) {
-                        var element = document.getElementById('message-' + id);
-                        
-                        if (element !== null && element !== undefined) {
-                            event.preventDefault();
-                        
-                            element.classList.add('chatlog__message-container--highlighted');
-                        
-                            window.scrollTo({
-                                top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
-                                behavior: 'smooth'
-                            });
-                        
-                            window.setTimeout(function() {
-                                element.classList.remove('chatlog__message-container--highlighted');
-                            }, 2000);
-                        }
-                    }
-                        
-                    function scrollToMessage(event, id) {
-                        var element = document.getElementById('message-' + id);
-                        
-                        if (element) {
-                            event.preventDefault();
-                        
-                            element.classList.add('chatlog__message--highlighted');
-                        
-                            window.scrollTo({
-                                top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
-                                behavior: 'smooth'
-                            });
-                        
-                            window.setTimeout(function() {
-                                element.classList.remove('chatlog__message--highlighted');
-                            }, 2000);
-                        }
-                    }
-                        
-                    <!--  Spoiler (|| Spoiler ||)  -->
-                    function showSpoiler(event, element) {
-                        if (element && element.classList.contains('spoiler--hidden')) {
-                            event.preventDefault();
-                            element.classList.remove('spoiler--hidden');
-                        }
-                    }
-                        
-                    <!--  Menu Dropdown (Selectmenu)  -->
-                    function showDropdown(dropdownID) {
-                      <!--    If you are reading this and can improve the JS logic, let me know!-->
-                      document.getElementById("dropdownButton" + dropdownID).classList.toggle("chatlog__component-dropdown-border");
-                      document.getElementById("dropdownMenuContent" + dropdownID).classList.toggle("chatlog__component-dropdown-show");
-                      document.getElementById("dropdownMenu" + dropdownID).classList.toggle("chatlog__component-dropdown-show");
-                    }
-                        
-                    <!--  Code Block Markdown (```lang```) -->
-                    document.addEventListener('DOMContentLoaded', () => {
-                        document.querySelectorAll('.pre--multiline').forEach((block) => {
-                            hljs.highlightBlock(block);
-                        });
-                    });
-                </script>
-            </head>
-            <body>
-                        
-            <div class="panel">
-                <img class="panel__hashtag-icon" src="https://cdn.jsdelivr.net/gh/mahtoid/DiscordUtils@master/discord-hashtag.svg"/>
-                <span>{{CHANNEL_NAME}}</span>
-                        
-                {{CHANNEL_TOPIC}}
-                        
-                <div class="panel__summary-button" id="summary-button">
-                    <span>Summary</span>
-                </div>
-            </div>
-                        
-            <div class="main">
-                <div class="buffer">
-                    <!-- Magical space goes here -->
-                </div>
-                        
-                <div class="info">
-                    <span class="info__title">Welcome to #{{CHANNEL_NAME}}!</span>
-                    {{SUBJECT}}
-                </div>
-                        
-                <div class="chatlog">
-                    {{MESSAGES}}
-                </div>
-            </div>
-                        
-            <div class="footer">
-                <span class="footer__text">This transcript was generated on {{DATE_TIME}}</span>
-            </div>
-                        
-            <div id="context-menu">
-                <div class="item">Copy Message ID</div>
-            </div>
-                        
-            <div id="summary-popout" class="summary-popout">
-                <div class="meta__header">
-                     <img src="{{SERVER_AVATAR_URL}}" alt="Avatar">
-                </div>
-                <div class="meta__description">
-                    <div class="meta__details">
-                        <div class="meta__user">{{SERVER_NAME}}</div>
-                    </div>
-                    <div class="meta__field">
-                        <div class="meta__title">Guild ID</div>
-                        <div class="meta__value">{{GUILD_ID}}</div>
-                    </div>
-                    <div class="meta__field">
-                        <div class="meta__title">Channel ID</div>
-                        <div class="meta__value">{{CHANNEL_ID}}</div>
-                    </div>
-                    <div class="meta__field">
-                        <div class="meta__title">Channel Creation Date</div>
-                        <div class="meta__value">{{CHANNEL_CREATED_AT}}</div>
-                    </div>
-                    <div class="meta__field">
-                        <div class="meta__title">Total Message Count</div>
-                        <div class="meta__value">{{MESSAGE_COUNT}}</div>
-                    </div>
-                    <div class="meta__field">
-                        <div class="meta__title">Total Message Participants</div>
-                        <div class="meta__value">{{MESSAGE_PARTICIPANTS}}</div>
-                    </div>
-                    {{SD}}
-                </div>
-            </div>
-            {{META_DATA}}
-                        
-            <script>
-                <!-- Right Click - Copy ID -->
-                let metaPopout = undefined
-                const contextMenu = document.getElementById("context-menu");
-                const scope = document.querySelector("body");
-                const messages = document.getElementsByClassName("chatlog__message-container")
-                let messageID = ""
-                const normalisePosition = (mouseX, mouseY, type) => {
-                    if (type == "context") {
-                        maxWidth = contextMenu.clientWidth
-                        maxHeight = contextMenu.clientHeight
-                    } else if (type == "user") {
-                        maxWidth = metaPopout.clientWidth
-                        maxHeight = metaPopout.clientHeight
-                    }
-                        
-                    let {
-                        left: scopeOffsetX,
-                        top: scopeOffsetY,
-                    } = scope.getBoundingClientRect()
-                    scopeOffsetX = scopeOffsetX < 0 ? 0 : scopeOffsetX;
-                    scopeOffsetY = scopeOffsetY < 0 ? 0 : scopeOffsetY
-                    const scopeX = mouseX - scopeOffsetX;
-                    const scopeY = mouseY - scopeOffsetY
-                        
-                    const outOfBoundsOnX = scopeX + maxWidth > scope.clientWidth
-                    const outOfBoundsOnY = scopeY + maxHeight > scope.clientHeight
-                    let normalizedX = mouseX;
-                    let normalizedY = mouseY
-                        
-                    if (outOfBoundsOnX) {
-                        normalizedX = scopeOffsetX + scope.clientWidth - maxWidth;
-                    }
-                        
-                    if (outOfBoundsOnY) {
-                        normalizedY = scopeOffsetY + scope.clientHeight - maxHeight;
-                    }
-                        
-                    return { normalizedX, normalizedY };
-                }
-                        
-                scope.addEventListener("contextmenu", (e) => {
-                    event.preventDefault()
-                    if (e.target.offsetParent != contextMenu) {
-                      contextMenu.classList.remove("visible");
-                    }
-                })
-                        
-                var openContextMenu = function() {
-                    const { clientX: mouseX, clientY: mouseY } = event
-                    const { normalizedX, normalizedY } = normalisePosition(mouseX, mouseY, "context")
-                        
-                    contextMenu.classList.remove("visible")
-                    contextMenu.style.left = `${normalizedX}px`;
-                    contextMenu.style.top = `${normalizedY}px`
-                        
-                    setTimeout(() => {
-                        contextMenu.classList.add("visible");
-                    })
-                    messageID = this.getAttribute("data-message-id");
-                }
-                        
-                for (var i = 0; i < messages.length; i++) {
-                    messages[i].addEventListener("contextmenu", openContextMenu)
-                }
-                        
-                scope.addEventListener("click", (e) => {
-                    if (e.target.offsetParent != contextMenu) {
-                      contextMenu.classList.remove("visible");
-                    } else {
-                        navigator.clipboard.writeText(messageID)
-                        contextMenu.classList.remove("visible");
-                    }
-                        
-                    if (metaPopout && e.target.offsetParent != metaPopout) {
-                        metaPopout.classList.remove("mounted")
-                    }
-                        
-                    if (e.target.offsetParent != summaryPopout) {
-                        summaryPopout.classList.remove("visible")
-                    }
-                })
-                        
-                mainScroll = document.querySelector('.main')
-                mainScroll.addEventListener('scroll', (e) => {
-                    if (e.target.offsetParent != contextMenu) {
-                        contextMenu.classList.remove("visible");
-                    } else {
-                        navigator.clipboard.writeText(messageID)
-                        contextMenu.classList.remove("visible");
-                    }
-                        
-                    if (metaPopout && e.target.offsetParent != metaPopout) {
-                        metaPopout.classList.remove("mounted")
-                    }
-                });
-                        
-                <!-- User Dialog -->
-                const summaryPopout = document.getElementById('summary-popout')
-                        
-                window.onload = function() {
-                    var author_name = document.getElementsByClassName('chatlog__author-name');
-                    var followup_author =document.getElementsByClassName('chatlog__followup-author');
-                    var followup_avatar = document.getElementsByClassName("chatlog__followup-avatar");
-                    var avatar = document.getElementsByClassName("chatlog__avatar");
-                    const element_select = [...author_name, ...followup_author, ...followup_avatar, ...avatar]
-                        
-                    for(var i = 0; i < element_select.length; i++) {
-                        var element = element_select[i];
-                        element.onclick = function() {
-                            authorID = this.getAttribute("data-user-id");
-                        
-                            if (metaPopout) {
-                                metaPopout.classList.remove('mounted');
-                            }
-                        
-                            metaPopout = document.getElementById('meta-popout-' + authorID);
-                        
-                            const subtractX = document.querySelector('.main').scrollLeft
-                            const subtractY = document.querySelector('.main').scrollTop
-                        
-                            const elementX = this.offsetLeft + this.offsetWidth + 10 - subtractX
-                            const elementY = this.offsetTop - subtractY
-                        
-                            const { normalizedX, normalizedY } = normalisePosition(elementX, elementY, "user")
-                        
-                            metaPopout.style.left = `${normalizedX}px`;
-                            metaPopout.style.top = `${normalizedY}px`;
-                        
-                            setTimeout(() => {
-                                metaPopout.classList.add("mounted")
-                            });
-                        }
-                    }
-                        
-                    var summaryButton = document.getElementById('summary-button');
-                    summaryButton.onclick = function() {
-                        const elementX = this.offsetLeft - 110
-                        const elementY = this.offsetTop + 30
-                        
-                        summaryPopout.style.left = `${elementX}px`;
-                        summaryPopout.style.top = `${elementY}px`;
-                        
-                        setTimeout(() => {
-                            summaryPopout.classList.add("visible")
-                        });
-                    }
-                }
-                        
-                <!-- Timestamps: Tooltips -->
-                tippy('.chatlog__timestamp', {
-                    placement: 'top',
-                    animation: 'fade',
-                    content: (reference) => reference.getAttribute('data-timestamp'),
-                    theme: 'disc',
-                });
-                        
-                tippy('.chatlog__short-timestamp', {
-                    placement: 'top',
-                    animation: 'fade',
-                    content: (reference) => reference.getAttribute('data-timestamp'),
-                    theme: 'disc',
-                });
-                        
-                tippy('.chatlog__reference-edited-timestamp', {
-                    placement: 'top',
-                    animation: 'fade',
-                    content: (reference) => reference.getAttribute('data-timestamp'),
-                    theme: 'disc',
-                });
-                        
-                <!-- Timestamps: Tooltips -->
-                tippy('.unix-timestamp', {
-                    placement: 'top',
-                    animation: 'fade',
-                    content: (reference) => reference.getAttribute('data-timestamp'),
-                    theme: 'disc',
-                });
-                        
-                {{FANCY_TIME}}
-            </script>
-                        
-            </body>
-            </html>
+            </style>
             """;
+
+    public static String base(String serverName, String channelName, String channelTopic, String subject, String messages,
+                              String dateTime, String serverAvatarUrl, long guildId, long channelId, String channelCreatedAt,
+                              int messageCount, String messageParticipants, String sd, String metaData, String fancyTime) {
+        return String.format("""           
+                <!DOCTYPE html>
+                <html lang="en">
+                            
+                <head>
+                    <title>%s - %s</title>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                    <meta name="viewport" content="width=device-width" />
+                    
+                    %s        
+                    
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-dark.min.css">
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+                    <script src="https://unpkg.com/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
+                    <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/customParseFormat.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isToday.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isTomorrow.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.5/plugin/isBetween.js"></script>
+                            
+                    <script>
+                        //  Scroll to Message (References)
+                        function scrollToMessage(event, id) {
+                            var element = document.getElementById('message-' + id);
+                            
+                            if (element !== null && element !== undefined) {
+                                event.preventDefault();
+                            
+                                element.classList.add('chatlog__message-container--highlighted');
+                            
+                                window.scrollTo({
+                                    top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                                    behavior: 'smooth'
+                                });
+                            
+                                window.setTimeout(function() {
+                                    element.classList.remove('chatlog__message-container--highlighted');
+                                }, 2000);
+                            }
+                        }
+                            
+                        function scrollToMessage(event, id) {
+                            var element = document.getElementById('message-' + id);
+                            
+                            if (element) {
+                                event.preventDefault();
+                            
+                                element.classList.add('chatlog__message--highlighted');
+                            
+                                window.scrollTo({
+                                    top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                                    behavior: 'smooth'
+                                });
+                            
+                                window.setTimeout(function() {
+                                    element.classList.remove('chatlog__message--highlighted');
+                                }, 2000);
+                            }
+                        }
+                            
+                        //  Spoiler (|| Spoiler ||)
+                        function showSpoiler(event, element) {
+                            if (element && element.classList.contains('spoiler--hidden')) {
+                                event.preventDefault();
+                                element.classList.remove('spoiler--hidden');
+                            }
+                        }
+                            
+                        //  Menu Dropdown (Selectmenu)
+                        function showDropdown(dropdownID) {
+                          //    If you are reading this and can improve the JS logic, let me know!
+                          document.getElementById("dropdownButton" + dropdownID).classList.toggle("chatlog__component-dropdown-border");
+                          document.getElementById("dropdownMenuContent" + dropdownID).classList.toggle("chatlog__component-dropdown-show");
+                          document.getElementById("dropdownMenu" + dropdownID).classList.toggle("chatlog__component-dropdown-show");
+                        }
+                            
+                        //  Code Block Markdown (```lang```)
+                        document.addEventListener('DOMContentLoaded', () => {
+                            document.querySelectorAll('.pre--multiline').forEach((block) => {
+                                hljs.highlightBlock(block);
+                            });
+                        });
+                    </script>
+                </head>
+                <body>
+                            
+                <div class="panel">
+                    <img class="panel__hashtag-icon" src="https://cdn.jsdelivr.net/gh/mahtoid/DiscordUtils@master/discord-hashtag.svg"/>
+                    <span>%s</span>
+                            
+                    %s
+                            
+                    <div class="panel__summary-button" id="summary-button">
+                        <span>Summary</span>
+                    </div>
+                </div>
+                            
+                <div class="main">
+                    <div class="buffer">
+                        <!-- Magical space goes here -->
+                    </div>
+                            
+                    <div class="info">
+                        <span class="info__title">Welcome to #%s!</span>
+                        %s
+                    </div>
+                            
+                    <div class="chatlog">
+                        %s
+                    </div>
+                </div>
+                            
+                <div class="footer">
+                    <span class="footer__text">This transcript was generated on %s</span>
+                </div>
+                            
+                <div id="context-menu">
+                    <div class="item">Copy Message ID</div>
+                </div>
+                            
+                <div id="summary-popout" class="summary-popout">
+                    <div class="meta__header">
+                         <img src="%s" alt="Avatar">
+                    </div>
+                    <div class="meta__description">
+                        <div class="meta__details">
+                            <div class="meta__user">%s</div>
+                        </div>
+                        <div class="meta__field">
+                            <div class="meta__title">Guild ID</div>
+                            <div class="meta__value">%s</div>
+                        </div>
+                        <div class="meta__field">
+                            <div class="meta__title">Channel ID</div>
+                            <div class="meta__value">%s</div>
+                        </div>
+                        <div class="meta__field">
+                            <div class="meta__title">Channel Creation Date</div>
+                            <div class="meta__value">%s</div>
+                        </div>
+                        <div class="meta__field">
+                            <div class="meta__title">Total Message Count</div>
+                            <div class="meta__value">%s</div>
+                        </div>
+                        <div class="meta__field">
+                            <div class="meta__title">Total Message Participants</div>
+                            <div class="meta__value">%s</div>
+                        </div>
+                        %s
+                    </div>
+                </div>
+                %s
+                            
+                <script>
+                    <!-- Right Click - Copy ID -->
+                    let metaPopout = undefined
+                    const contextMenu = document.getElementById("context-menu");
+                    const scope = document.querySelector("body");
+                    const messages = document.getElementsByClassName("chatlog__message-container")
+                    let messageID = ""
+                    const normalisePosition = (mouseX, mouseY, type) => {
+                        if (type == "context") {
+                            maxWidth = contextMenu.clientWidth
+                            maxHeight = contextMenu.clientHeight
+                        } else if (type == "user") {
+                            maxWidth = metaPopout.clientWidth
+                            maxHeight = metaPopout.clientHeight
+                        }
+                            
+                        let {
+                            left: scopeOffsetX,
+                            top: scopeOffsetY,
+                        } = scope.getBoundingClientRect()
+                        scopeOffsetX = scopeOffsetX < 0 ? 0 : scopeOffsetX;
+                        scopeOffsetY = scopeOffsetY < 0 ? 0 : scopeOffsetY
+                        const scopeX = mouseX - scopeOffsetX;
+                        const scopeY = mouseY - scopeOffsetY
+                            
+                        const outOfBoundsOnX = scopeX + maxWidth > scope.clientWidth
+                        const outOfBoundsOnY = scopeY + maxHeight > scope.clientHeight
+                        let normalizedX = mouseX;
+                        let normalizedY = mouseY
+                            
+                        if (outOfBoundsOnX) {
+                            normalizedX = scopeOffsetX + scope.clientWidth - maxWidth;
+                        }
+                            
+                        if (outOfBoundsOnY) {
+                            normalizedY = scopeOffsetY + scope.clientHeight - maxHeight;
+                        }
+                            
+                        return { normalizedX, normalizedY };
+                    }
+                            
+                    scope.addEventListener("contextmenu", (e) => {
+                        event.preventDefault()
+                        if (e.target.offsetParent != contextMenu) {
+                          contextMenu.classList.remove("visible");
+                        }
+                    })
+                            
+                    var openContextMenu = function() {
+                        const { clientX: mouseX, clientY: mouseY } = event
+                        const { normalizedX, normalizedY } = normalisePosition(mouseX, mouseY, "context")
+                            
+                        contextMenu.classList.remove("visible")
+                        contextMenu.style.left = `${normalizedX}px`;
+                        contextMenu.style.top = `${normalizedY}px`
+                            
+                        setTimeout(() => {
+                            contextMenu.classList.add("visible");
+                        })
+                        messageID = this.getAttribute("data-message-id");
+                    }
+                            
+                    for (var i = 0; i < messages.length; i++) {
+                        messages[i].addEventListener("contextmenu", openContextMenu)
+                    }
+                            
+                    scope.addEventListener("click", (e) => {
+                        if (e.target.offsetParent != contextMenu) {
+                          contextMenu.classList.remove("visible");
+                        } else {
+                            navigator.clipboard.writeText(messageID)
+                            contextMenu.classList.remove("visible");
+                        }
+                            
+                        if (metaPopout && e.target.offsetParent != metaPopout) {
+                            metaPopout.classList.remove("mounted")
+                        }
+                            
+                        if (e.target.offsetParent != summaryPopout) {
+                            summaryPopout.classList.remove("visible")
+                        }
+                    })
+                            
+                    mainScroll = document.querySelector('.main')
+                    mainScroll.addEventListener('scroll', (e) => {
+                        if (e.target.offsetParent != contextMenu) {
+                            contextMenu.classList.remove("visible");
+                        } else {
+                            navigator.clipboard.writeText(messageID)
+                            contextMenu.classList.remove("visible");
+                        }
+                            
+                        if (metaPopout && e.target.offsetParent != metaPopout) {
+                            metaPopout.classList.remove("mounted")
+                        }
+                    });
+                            
+                    <!-- User Dialog -->
+                    const summaryPopout = document.getElementById('summary-popout')
+                            
+                    window.onload = function() {
+                        var author_name = document.getElementsByClassName('chatlog__author-name');
+                        var followup_author =document.getElementsByClassName('chatlog__followup-author');
+                        var followup_avatar = document.getElementsByClassName("chatlog__followup-avatar");
+                        var avatar = document.getElementsByClassName("chatlog__avatar");
+                        const element_select = [...author_name, ...followup_author, ...followup_avatar, ...avatar]
+                            
+                        for(var i = 0; i < element_select.length; i++) {
+                            var element = element_select[i];
+                            element.onclick = function() {
+                                authorID = this.getAttribute("data-user-id");
+                            
+                                if (metaPopout) {
+                                    metaPopout.classList.remove('mounted');
+                                }
+                            
+                                metaPopout = document.getElementById('meta-popout-' + authorID);
+                            
+                                const subtractX = document.querySelector('.main').scrollLeft
+                                const subtractY = document.querySelector('.main').scrollTop
+                            
+                                const elementX = this.offsetLeft + this.offsetWidth + 10 - subtractX
+                                const elementY = this.offsetTop - subtractY
+                            
+                                const { normalizedX, normalizedY } = normalisePosition(elementX, elementY, "user")
+                            
+                                metaPopout.style.left = `${normalizedX}px`;
+                                metaPopout.style.top = `${normalizedY}px`;
+                            
+                                setTimeout(() => {
+                                    metaPopout.classList.add("mounted")
+                                });
+                            }
+                        }
+                            
+                        var summaryButton = document.getElementById('summary-button');
+                        summaryButton.onclick = function() {
+                            const elementX = this.offsetLeft - 110
+                            const elementY = this.offsetTop + 30
+                            
+                            summaryPopout.style.left = `${elementX}px`;
+                            summaryPopout.style.top = `${elementY}px`;
+                            
+                            setTimeout(() => {
+                                summaryPopout.classList.add("visible")
+                            });
+                        }
+                    }
+                            
+                    <!-- Timestamps: Tooltips -->
+                    tippy('.chatlog__timestamp', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('data-timestamp'),
+                        theme: 'disc',
+                    });
+                            
+                    tippy('.chatlog__short-timestamp', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('data-timestamp'),
+                        theme: 'disc',
+                    });
+                            
+                    tippy('.chatlog__reference-edited-timestamp', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('data-timestamp'),
+                        theme: 'disc',
+                    });
+                            
+                    <!-- Timestamps: Tooltips -->
+                    tippy('.unix-timestamp', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('data-timestamp'),
+                        theme: 'disc',
+                    });
+                            
+                    %s
+                </script>
+                            
+                </body>
+                </html>
+                """, serverName, channelName, style, channelName, channelTopic, channelName, subject, messages,
+                dateTime, serverAvatarUrl, serverName, guildId, channelId, channelCreatedAt, messageCount,
+                messageParticipants, sd, metaData, fancyTime);
+    }
 
 
     public static final class Script {
         private Script() {}
 
-        public static final String CHANNEL_SUBJECT = "<span class=\"info__subject\">This is the {{LIMIT}} of the #{{CHANNEL_NAME}} channel. {{RAW_CHANNEL_TOPIC}}</span>";
+        public static String channelSubject(String limit, String channelName, String rawChannelTopic) {
+            return String.format("<span class=\"info__subject\">This is the %s of the #%s channel. %s</span>", limit, channelName, rawChannelTopic);
+        }
 
-        public static final String CHANNEL_TOPIC = "<span class=\"panel__channel-topic\">{{CHANNEL_TOPIC}}</span>";
+        public static String channelTopic(String channelTopic) {
+            return String.format("<span class=\"panel__channel-topic\">%s</span>", channelTopic);
+        }
 
-        public static final String FANCY_TIME = """
+        public static String fancyTime(String timezone) {
+            return String.format("""
                 <!-- Timestamps: Content -->
                 dayjs.extend(window.dayjs_plugin_utc);
                 dayjs.extend(window.dayjs_plugin_timezone);
@@ -1617,11 +1635,11 @@ public final class DiscordHtml {
                 dayjs.extend(window.dayjs_plugin_isTomorrow);
                 dayjs.extend(window.dayjs_plugin_isBetween);
                                 
-                dayjs.tz.setDefault("{{TIMEZONE}}")
+                dayjs.tz.setDefault("%s")
                 dayjs().format("DD/MM/YYYY HH:mm");
                 var timeStamps = document.getElementsByClassName('chatlog__timestamp');
                 for(var i = 0; i < timeStamps.length; i++) {
-                    const date_1 = dayjs.tz(timeStamps[i].innerText, "DD-MM-YYYY HH:mm", "{{TIMEZONE}}");
+                    const date_1 = dayjs.tz(timeStamps[i].innerText, "DD-MM-YYYY HH:mm", "%s");
                     const date_2 = dayjs.tz();
                     const diff = date_2.diff(date_1, 'day', true)
                                 
@@ -1635,130 +1653,151 @@ public final class DiscordHtml {
                         timeStamps[i].innerText = date_1.day(date_1.day()).format("dddd [at] HH:mm")
                     }
                 }
-                """;
+                """, timezone, timezone);
+        }
     }
 
     public static final class Reaction {
 
         private Reaction() {}
 
-        public static final String CUSTOM_EMOJI = """
+        public static String customEmoji(String emoji, String emojiFile, int emojiCount) {
+            return String.format("""
                 <div class=chatlog__reaction>
-                    <img class="emoji emoji--small" src="https://cdn.discordapp.com/emojis/{{EMOJI}}.{{EMOJI_FILE}}">
-                    <span class="chatlog__reaction-count">{{EMOJI_COUNT}}</span>
+                    <img class="emoji emoji--small" src="https://cdn.discordapp.com/emojis/%s.%s">
+                    <span class="chatlog__reaction-count">%s</span>
                 </div>
-                """;
+                """, emoji, emojiFile, emojiCount);
+        }
 
-        public static final String EMOJI = """
+        public static String emoji(String emoji, int emojiCount) {
+            return String.format("""
                 <div class=chatlog__reaction>
-                    {{EMOJI}}
-                    <span class="chatlog__reaction-count">{{EMOJI_COUNT}}</span>
+                    %s
+                    <span class="chatlog__reaction-count">%s</span>
                 </div>
-                """;
+                """, emoji, emojiCount);
+        }
     }
 
     public static final class Message {
 
         private Message() {}
 
-        public static final String BOT_TAG_VERIFIED = """
+        public static String botTagVerified(String emoji, int emojiCount) {
+            return String.format("""
                 <div class=chatlog__reaction>
-                    {{EMOJI}}
-                    <span class="chatlog__reaction-count">{{EMOJI_COUNT}}</span>
+                    %s
+                    <span class="chatlog__reaction-count">%s</span>
                 </div>
-                """;
+                """, emoji, emojiCount);
+        }
 
-        public static final String BOT_TAG = "<span class=\"chatlog__bot-tag\">BOT</span>";
+        public static String botTag() {
+            return "<span class=\"chatlog__bot-tag\">BOT</span>";
+        }
 
-        public static final String CONTENT = """
-                <span class="chatlog__markdown-preserve">{{MESSAGE_CONTENT}}</span>
-                {{EDIT}}
-                """;
+        public static String content(String messageContent, String edit) {
+            return String.format("""
+                <span class="chatlog__markdown-preserve">%s</span>
+                %s
+                """, messageContent, edit);
+        }
 
-        public static final String END = "</div>";
+        public static String end() {
+            return "</div>";
+        }
 
-        public static final String INTERACTION = """
+        public static String interaction(String avatarUrl, long userId, String botTag, Color userColor, String name, String filter, String command) {
+            return String.format("""
                 <div class="chatlog__followup">
-                        <img class="chatlog__followup-avatar" src="{{AVATAR_URL}}" alt="Avatar" loading="lazy" data-user-id="{{USER_ID}}">
-                        {{BOT_TAG}}
-                        <div class="chatlog__followup-author" style="{{USER_COLOUR}}" data-user-id="{{USER_ID}}">{{NAME}}</div>
+                        <img class="chatlog__followup-avatar" src="%s" alt="Avatar" loading="lazy" data-user-id="%s">
+                        %s
+                        <div class="chatlog__followup-author" style="%s" data-user-id="%s">%s</div>
                         <div class="chatlog__followup-content">
-                            <span class="chatlog__interaction-filler">{{FILLER}}</span>
-                            <span class="chatlog__interaction-link">{{COMMAND}}</span>
+                            <span class="chatlog__interaction-filler">%s</span>
+                            <span class="chatlog__interaction-link">%s</span>
                         </div>
                 </div>
-                """;
+                """, avatarUrl, userId, botTag, color(userColor), userId, name, filter, command);
+        }
 
-        public static final String MESSAGE = """
-                            <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
+        public static String message(long messageId, String timestamp, String time, String messageContent, String attachments, String embeds, String components, String emoji) {
+            return String.format("""
+                            <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
                                     <div class="chatlog__message">
                                 
                                         <div class="chatlog__message-aside">
-                                            <div class="chatlog__short-timestamp" data-timestamp="{{TIMESTAMP}}">{{TIME}}</div>
+                                            <div class="chatlog__short-timestamp" data-timestamp="%s">%s</div>
                                         </div>
                                 
                                         <div class="chatlog__message-primary">
-                                            <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                                {{MESSAGE_CONTENT}}
+                                            <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                                %s
                                 
-                                                {{ATTACHMENTS}}
+                                                %s
                                 
-                                                {{EMBEDS}}
+                                                %s
                                 
-                                                {{COMPONENTS}}
+                                                %s
                                 
-                                                {{EMOJI}}
+                                                %s
                                 
                                             </div>
                                         </div>
                                     </div>
                             </div>
-                """;
+                """, messageId, messageId, timestamp, time, messageId, messageId, messageContent, attachments, embeds, components, emoji);
+        }
 
-        public static final String META = """
+        public static String meta(long userId, String userAvatar, String display, String username, String discriminator, String bot,
+                                  String discordIcon, String createdAt, String guildIcon, String joinedAt, long memberId, long messageCount) {
+            return String.format("""
                 
-                <div id="meta-popout-{{USER_ID}}" class="meta-popout">
+                <div id="meta-popout-%s" class="meta-popout">
                     <div class="meta__header">
-                         <img src="{{USER_AVATAR}}" alt="Avatar">
+                         <img src="%s" alt="Avatar">
                     </div>
                     <div class="meta__description">
-                        {{DISPLAY}}
+                        %s
                         <div class="meta__details">
-                            <div class="meta__user">{{USERNAME}}</div>
-                            <div class="meta__discriminator">{{DISCRIMINATOR}}</div>
-                            {{BOT}}
+                            <div class="meta__user">%s</div>
+                            <div class="meta__discriminator">%s</div>
+                            %s
                         </div>
                         <div class="meta__divider-2"></div>
                         <div class="meta__field">
                             <div class="meta__title">Member Since</div>
-                            <div class="meta__value"><img src="{{DISCORD_ICON}}"/> {{CREATED_AT}} <div class="meta__divider"></div> <img src="{{GUILD_ICON}}" class="meta__img-border"/> {{JOINED_AT}}</div>
+                            <div class="meta__value"><img src="%s"/> %s <div class="meta__divider"></div> <img src="%s" class="meta__img-border"/> %s</div>
                         </div>
                         <div class="meta__field">
                             <div class="meta__title">Member ID</div>
-                            <div class="meta__value">{{MEMBER_ID}}</div>
+                            <div class="meta__value">%s</div>
                         </div>
                         <div class="meta__field">
                             <div class="meta__title">Message Count</div>
-                            <div class="meta__value">{{MESSAGE_COUNT}}</div>
+                            <div class="meta__value">%s</div>
                         </div>
                     </div>
                 </div>
-                """;
+                """, userId, userAvatar, display, username, discriminator, bot, discordIcon, createdAt, guildIcon, joinedAt, memberId, messageCount);
+        }
 
-        public static final String PIN = """
+        public static String pin(long messageId, String pinUrl, Color userColor, String name, long refMessageId) {
+            return String.format("""
                 <div class="chatlog__message-group">
-                    <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
+                    <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
                         <div class="chatlog__message">
                             <div class="chatlog__message-aside">
-                               <img class="chatlog__pin-avatar" src="{{PIN_URL}}" />
+                               <img class="chatlog__pin-avatar" src="%s" />
                             </div>
                             <div class="chatlog__message-primary">
                                 <div class="chatlog__header">
                                 </div>
                                 
-                                <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                    <span class="chatlog__reference-name" style="{{USER_COLOUR}}">{{NAME}}</span> has pinned
-                                    <a class="chatlog__pinned-link" href="#" onclick="scrollToMessage(event, '{{REF_MESSAGE_ID}}')">
+                                <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                    <span class="chatlog__reference-name" style="%s">%s</span> has pinned
+                                    <a class="chatlog__pinned-link" href="#" onclick="scrollToMessage(event, '%s')">
                                         a message
                                     </a>
                                     to this channel
@@ -1767,328 +1806,371 @@ public final class DiscordHtml {
                         </div>
                     </div>
                 </div>
-                """;
+                """, messageId, messageId, pinUrl, messageId, messageId, color(userColor), name, refMessageId);
+        }
 
-        public static final String REFERENCE = """
+        public static String reference(String avatarUrl, long userId, String botTag, Color userColor, String name, long messageId, String content, String icon, String edit) {
+            return String.format("""
                 <div class="chatlog__followup">
-                        <img class="chatlog__followup-avatar" src="{{AVATAR_URL}}" alt="Avatar" loading="lazy" data-user-id="{{USER_ID}}">
-                        {{BOT_TAG}}
-                        <div class="chatlog__followup-author" style="{{USER_COLOUR}}" data-user-id="{{USER_ID}}">{{NAME}}</div>
+                        <img class="chatlog__followup-avatar" src="%s" alt="Avatar" loading="lazy" data-user-id="%s">
+                        %s
+                        <div class="chatlog__followup-author" style="%s" data-user-id="%s">%s</div>
                         <div class="chatlog__followup-content">
-                            <span class="chatlog__reference-link" onclick="scrollToMessage(event, '{{MESSAGE_ID}}')">
-                                    {{CONTENT}} {{ICON}}
+                            <span class="chatlog__reference-link" onclick="scrollToMessage(event, '%s')">
+                                    %s %s
                             </span>
-                            {{EDIT}}
+                            %s
                         </div>
                 </div>
-                """;
+                """, avatarUrl, userId, botTag, color(userColor), userId, name, messageId, content, icon, edit);
+        }
 
-        public static final String REFERENCE_UNKNOWN = """
+        public static String referenceUnknown() {
+            return """
                 <div class="chatlog__followup">
                     <span class="chatlog__reference-unknown"><em>Original message was deleted.</em></span>
                 </div>
                 """;
+        }
 
-        public static final String START = """
+        public static String start(long messageId, String referenceSymbol, String avatarUrl, long userId, String reference, String nameTag,
+                                   Color userColor, String name, String userIcon, String botTag, String timestamp, String defaultTimestamp,
+                                   String messageContent, String attachments, String embeds, String components, String emoji) {
+            return String.format("""
                 <div class="chatlog__message-group">
-                    <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
+                    <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
                         <div class="chatlog__message">
                             <div class="chatlog__message-aside">
-                                {{REFERENCE_SYMBOL}}
-                                <img class="chatlog__avatar" src="{{AVATAR_URL}}"  data-user-id="{{USER_ID}}" />
+                                %s
+                                <img class="chatlog__avatar" src="%s"  data-user-id="%s" />
                             </div>
                             <div class="chatlog__message-primary">
-                                {{REFERENCE}}
+                                %s
                                 <div class="chatlog__header">
-                                    <span class="chatlog__author-name" title="{{NAME_TAG}}" data-user-id="{{USER_ID}}" style="{{USER_COLOUR}}">{{NAME}}{{USER_ICON}}</span>
-                                    {{BOT_TAG}}
-                                    <span class="chatlog__timestamp" data-timestamp="{{TIMESTAMP}}">{{DEFAULT_TIMESTAMP}}</span>
+                                    <span class="chatlog__author-name" title="%s" data-user-id="%s" style="%s">%s%s</span>
+                                    %s
+                                    <span class="chatlog__timestamp" data-timestamp="%s">%s</span>
                                 </div>
                                 
-                                <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                    {{MESSAGE_CONTENT}}
+                                <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                    %s
                                 
-                                    {{ATTACHMENTS}}
+                                    %s
                                 
-                                    {{EMBEDS}}
+                                    %s
                                 
-                                    {{COMPONENTS}}
+                                    %s
                                 
-                                    {{EMOJI}}
+                                    %s
                                 </div>
                             </div>
                         </div>
                     </div>
-                """;
+                """, messageId, messageId, referenceSymbol, avatarUrl, userId, reference, nameTag, userId, color(userColor),
+                    name, userIcon, botTag, timestamp, defaultTimestamp, messageId, messageId, messageContent, attachments, embeds, components, emoji);
+        }
 
-        public static final String THREAD = """
+        public static String thread(long messageId, String threadUrl, String nameTag, Color userColor, String name, String threadName) {
+            return String.format("""
                 <div class="chatlog__message-group">
-                    <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
+                    <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
                         <div class="chatlog__message">
                             <div class="chatlog__message-aside">
-                               <img class="chatlog__pin-avatar" src="{{THREAD_URL}}" />
+                               <img class="chatlog__pin-avatar" src="%s" />
                             </div>
                             <div class="chatlog__message-primary">
                                 <div class="chatlog__header">
                                 </div>
                                 
-                                <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                    <span class="chatlog__reference-name" title="{{NAME_TAG}}" style="{{USER_COLOUR}}">{{NAME}}</span> started a thread:
-                                    <span class="chatlog__thread-name">{{THREAD_NAME}}</span>.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """;
-
-        public static final String THREAD_ADD = """
-                <div class="chatlog__message-group">
-                    <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
-                        <div class="chatlog__message">
-                            <div class="chatlog__message-aside">
-                               <img class="chatlog__pin-avatar" src="{{THREAD_URL}}" />
-                            </div>
-                            <div class="chatlog__message-primary">
-                                <div class="chatlog__header">
-                                </div>
-                                
-                                <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                    <span class="chatlog__reference-name" title="{{NAME_TAG}}" style="{{USER_COLOUR}}">{{NAME}}</span> added
-                                    <span class="chatlog__reference-name" title="{{RECIPIENT_NAME_TAG}}" style="{{RECIPIENT_USER_COLOUR}}">{{RECIPIENT_NAME}}</span> to the thread.
+                                <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                    <span class="chatlog__reference-name" title="%s" style="%s">%s</span> started a thread:
+                                    <span class="chatlog__thread-name">%s</span>.
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                """;
+                """, messageId, messageId, threadUrl, messageId, messageId, nameTag, color(userColor), name, threadName);
+        }
 
-        public static final String THREAD_REMOVE = """
+        public static String threadAdd(long messageId, String threadUrl, String nameTag, Color userColor, String name, String recipientNameTag, Color recipientUserColor, String recipientName) {
+            return String.format("""
                 <div class="chatlog__message-group">
-                    <div id="chatlog__message-container-{{MESSAGE_ID}}" class="chatlog__message-container" data-message-id="{{MESSAGE_ID}}">
+                    <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
                         <div class="chatlog__message">
                             <div class="chatlog__message-aside">
-                               <img class="chatlog__pin-avatar" src="{{THREAD_URL}}" />
+                               <img class="chatlog__pin-avatar" src="%s" />
                             </div>
                             <div class="chatlog__message-primary">
                                 <div class="chatlog__header">
                                 </div>
                                 
-                                <div class="chatlog__content chatlog__markdown" data-message-id="{{MESSAGE_ID}}" id="message-{{MESSAGE_ID}}">
-                                    <span class="chatlog__reference-name" title="{{NAME_TAG}}" style="{{USER_COLOUR}}">{{NAME}}</span> removed
-                                    <span class="chatlog__reference-name" title="{{RECIPIENT_NAME_TAG}}" style="{{RECIPIENT_USER_COLOUR}}">{{RECIPIENT_NAME}}</span> from the thread.
+                                <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                    <span class="chatlog__reference-name" title="%s" style="%s">%s</span> added
+                                    <span class="chatlog__reference-name" title="%s" style="%s">%s</span> to the thread.
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                """;
+                """, messageId, messageId, threadUrl, messageId, messageId, nameTag, color(userColor), name, recipientNameTag, color(recipientUserColor), recipientName);
+        }
+
+        public static String threadRemove(long messageId, String threadUrl, String nameTag, Color userColor, String name, String recipientNameTag, Color recipientUserColor, String recipientName) {
+            return String.format("""
+                <div class="chatlog__message-group">
+                    <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
+                        <div class="chatlog__message">
+                            <div class="chatlog__message-aside">
+                               <img class="chatlog__pin-avatar" src="%s" />
+                            </div>
+                            <div class="chatlog__message-primary">
+                                <div class="chatlog__header">
+                                </div>
+                                
+                                <div class="chatlog__content chatlog__markdown" data-message-id="%s" id="message-%s">
+                                    <span class="chatlog__reference-name" title="%s" style="%s">%s</span> removed
+                                    <span class="chatlog__reference-name" title="%s" style="%s">%s</span> from the thread.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, messageId, messageId, threadUrl, messageId, messageId, nameTag, color(userColor), name, recipientNameTag, color(recipientUserColor), recipientName);
+        }
     }
 
     public static final class Embed {
 
         private Embed() {}
 
-        public static final String AUTHOR = """
+        public static String author(String name) {
+            return String.format("""
                 <div class="chatlog__embed-author">
-                                    <span class="chatlog__embed-author-name">{{AUTHOR}}</span>
+                                    <span class="chatlog__embed-author-name">%s</span>
                 </div>
-                """;
+                """, name);
+        }
 
-        public static final String AUTHOR_ICON = """
+        public static String authorIcon(String iconUrl, String name) {
+            return String.format("""
                 <div class="chatlog__embed-author">
-                                    <img class="chatlog__embed-author-icon" src="{{AUTHOR_ICON}}" alt="Author Icon">
-                                    <span class="chatlog__embed-author-name">{{AUTHOR}}</span>
+                                    <img class="chatlog__embed-author-icon" src="%s" alt="Author Icon">
+                                    <span class="chatlog__embed-author-name">%s</span>
                 </div>
-                """;
+                """, iconUrl, name);
+        }
 
-        public static final String BODY = """
+        public static String body(Color color, String author, String title, String description, String fields, String image, String thumbnail, String footer) {
+            return String.format("""
                 <div class=chatlog__embed>
-                    <div class=chatlog__embed-color-pill style=background-color:rgba({{EMBED_R}},{{EMBED_G}},{{EMBED_B}},1)></div>
+                    <div class=chatlog__embed-color-pill style=background-color:%s></div>
                     <div class=chatlog__embed-content-container>
                         <div class=chatlog__embed-content>
                             <div class=chatlog__embed-text>
-                                {{EMBED_AUTHOR}}
-                                {{EMBED_TITLE}}
+                                %s
+                                %s
                                 
-                                {{EMBED_DESC}}
+                                %s
                                 <div class="chatlog__embed-fields">
-                                    {{EMBED_FIELDS}}
+                                    %s
                                 </div>
                                 
                                 
-                                {{EMBED_IMAGE}}
+                                %s
                                 
                             </div>
                                 
                                 
                                 
-                            {{EMBED_THUMBNAIL}}
+                            %s
                                 
                         </div>
                                 
-                        {{EMBED_FOOTER}}
+                        %s
                                 
                     </div>
                 </div>
                                 
-                """;
+                """, color(color), author, title, description, fields, image, thumbnail, footer);
+        }
 
-        public static final String DESCRIPTION = """
+        public static String description(String description) {
+            return String.format("""
                 <div class=chatlog__embed-description>
-                    <span class="markdown preserve-whitespace">{{EMBED_DESC}}</span>
+                    <span class="markdown preserve-whitespace">%s</span>
                 </div>
-                """;
+                """, description);
+        }
 
-        public static final String FIELD_INLINE = """
-                <div class="chatlog__embed-field  chatlog__embed-field--inline ">
-                        <div class="chatlog__embed-field-name"><span class="markdown preserve-whitespace">{{FIELD_NAME}}</span></div>
-                        <div class="chatlog__embed-field-value"><span class="markdown preserve-whitespace">{{FIELD_VALUE}}</span></div>
+        public static String field(String name, String value, boolean inline) {
+            return String.format("""
+                <div class="chatlog__embed-field  chatlog__embed-field%s">
+                        <div class="chatlog__embed-field-name"><span class="markdown preserve-whitespace">%s</span></div>
+                        <div class="chatlog__embed-field-value"><span class="markdown preserve-whitespace">%s</span></div>
                 </div>
-                                
-                """;
+                """, inline ? "--inline " : "", name, value);
+        }
 
-        public static final String FIELD = """
-                <div class="chatlog__embed-field  chatlog__embed-field">
-                        <div class="chatlog__embed-field-name"><span class="markdown preserve-whitespace">{{FIELD_NAME}}</span></div>
-                        <div class="chatlog__embed-field-value"><span class="markdown preserve-whitespace">{{FIELD_VALUE}}</span></div>
-                </div>
-                """;
-
-        public static final String FOOTER = """
+        public static String footer(String footerText) {
+            return String.format("""
                 <div class="chatlog__embed-footer">
-                    <span class="chatlog__embed-footer-text">{{EMBED_FOOTER}}</span>
+                    <span class="chatlog__embed-footer-text">%s</span>
                 </div>
-                """;
+                """, footerText);
+        }
 
-        public static final String FOOTER_IMAGE = """
+        public static String footerImage(String iconUrl, String footerText) {
+            return String.format("""
                 <div class="chatlog__embed-footer">
-                    <img class="chatlog__embed-footer-icon" src="{{EMBED_FOOTER_ICON}}"><span class="chatlog__embed-footer-text">{{EMBED_FOOTER}}</span>
+                    <img class="chatlog__embed-footer-icon" src="%s"><span class="chatlog__embed-footer-text">%s</span>
                 </div>
-                """;
+                """, iconUrl, footerText);
+        }
 
-        public static final String IMAGE = """
+        public static String image(String imageUrl) {
+            return String.format("""
                 <div class="chatlog__embed-image-container">
-                    <a class="chatlog__embed-image-link" href="{{EMBED_IMAGE}}">
-                    <img class="chatlog__embed-image" src="{{EMBED_IMAGE}}">
+                    <a class="chatlog__embed-image-link" href="%s">
+                    <img class="chatlog__embed-image" src="%s">
                 </a>
                 </div>
-                """;
+                """, imageUrl, imageUrl);
+        }
 
-        public static final String THUMBNAIL = """
+        public static String thumbnail(String thumbnailUrl) {
+            return String.format("""
                 <div class="chatlog__embed-thumbnail-container">
-                    <a class="chatlog__embed-thumbnail-link" href="{{EMBED_THUMBNAIL}}">
-                    <img class="chatlog__embed-thumbnail" src="{{EMBED_THUMBNAIL}}">
+                    <a class="chatlog__embed-thumbnail-link" href="%s">
+                    <img class="chatlog__embed-thumbnail" src="%s">
                 </a>
                 </div>
-                """;
+                """, thumbnailUrl, thumbnailUrl);
+        }
 
-        public static final String TITLE = """
+        public static String title(String title) {
+            return String.format("""
                 <div class="chatlog__embed-title">
-                        <span class="markdown">{{EMBED_TITLE}}</span>
+                        <span class="markdown">%s</span>
                 </div>
-                """;
+                """, title);
+        }
     }
 
     public static final class Component {
 
         private Component() {}
 
-        public static final String BUTTON = """
-                <div class="chatlog__component-button {{DISABLED}}" style=background-color:{{STYLE}}>
-                    <a href="{{URL}}" style=text-decoration:none>
-                    <span class="chatlog__button-label">{{EMOJI}}{{LABEL}}{{ICON}}</span>
+        public static String button(boolean disabled, Color color, String url, String emoji, String label, String icon) {
+            return String.format("""
+                <div class="chatlog__component-button %s" style=background-color:%s>
+                    <a href="%s" style=text-decoration:none>
+                    <span class="chatlog__button-label">%s%s%s</span>
                     </a>
                 </div>
-                """;
+                """, disabled(disabled), color(color), url, emoji, label, icon);
+        }
 
-        public static final String MENU = """
-                <div class="chatlog__component-dropdown {{DISABLED}}">
-                  <button onclick="showDropdown({{ID}})" class="dropdownButton" id="dropdownButton{{ID}}">{{PLACEHOLDER}} {{ICON}}</button>
-                  <div id="dropdownMenuContent{{ID}}">
-                    {{CONTENT}}
+        public static String menu(boolean disabled, String id, String placeholder, String icon, String content) {
+            return String.format("""
+                <div class="chatlog__component-dropdown %s">
+                  <button onclick="showDropdown(%s)" class="dropdownButton" id="dropdownButton%s">%s %s</button>
+                  <div id="dropdownMenuContent%s">
+                    %s
                   </div>
                 </div>
-                """;
+                """, disabled(disabled), id, id, placeholder, icon, id, content);
+        }
 
-        public static final String MENU_OPTIONS = """
+        public static String menuOptions(String title, String description) {
+            return String.format("""
                 <a href="#">
-                        <span class="dropdownContentTitle">{{TITLE}}</span>
+                        <span class="dropdownContentTitle">%s</span>
                         <br>
-                        <span class="dropdownContentDesc">{{DESCRIPTION}}</span>
+                        <span class="dropdownContentDesc">%s</span>
                 </a>
-                """;
+                """, title, description);
+        }
 
-        public static final String MENU_OPTIONS_EMOJI = """
+        public static String menuOptionsEmoji(String emoji, String title, String description) {
+            return String.format("""
                 <div class="chatlog__dropdown-content">
                         <a href="#">
                                 <div class="chatlog__dropdown-emoji">
-                                        <span class="dropdownContentEmoji">{{EMOJI}}</span>
+                                        <span class="dropdownContentEmoji">%s</span>
                                 </div>
                                 <div class="chatlog__dropdown-text">
-                                        <span class="dropdownContentTitle">{{TITLE}}</span>
+                                        <span class="dropdownContentTitle">%s</span>
                                         <br>
-                                        <span class="dropdownContentDesc">{{DESCRIPTION}}</span>
+                                        <span class="dropdownContentDesc">%s</span>
                                 </div>
                         </a>
                 </div>
-                """;
+                """, emoji, title, description);
+        }
     }
 
     public static final class Attachment {
 
         private Attachment() {}
 
-        public static final String AUDIO = """
+        public static String audio(String iconUrl, String url, String filename, String filesize) {
+            return String.format("""
                 <div class=chatlog__attachment>
                     <div class="" onclick="">
                         <div class="">
                             <div class="chatlog__attachment-audio-container">
-                                <img src="{{ATTACH_ICON}}" class="chatlog__attachment-icon">
+                                <img src="%s" class="chatlog__attachment-icon">
                                 <div class="chatlog__attachment-filename">
-                                    <a href={{ATTACH_URL}}>{{ATTACH_FILE}}</a>
+                                    <a href=%s>%s</a>
                                 </div>
                                 <div class="chatlog__attachment-filesize">
-                                    {{ATTACH_BYTES}}
+                                    %s
                                 </div>
                                 <audio class="chatlog__attachment-thumbnail" style="padding-top: 5px" controls>
-                                    <source src="{{ATTACH_URL}}" alt="Audio Attachment" title="{{ATTACH_FILE}}">
+                                    <source src="%s" alt="Audio Attachment" title="%s">
                                 </audio>
                             </div>
                         </div>
                     </div>
                 </div>
-                """;
+                """, iconUrl, url, filename, filesize, url, filename);
+        }
 
-        public static final String IMAGE = """
+        public static String image(String url, String thumbnailUrl) {
+            return String.format("""
                 <div class=chatlog__attachment>
-                    <a href={{ATTACH_URL}}><img class=chatlog__attachment-thumbnail src={{ATTACH_URL_THUMB}}></a>
+                    <a href=%s><img class=chatlog__attachment-thumbnail src=%s></a>
                 </div>
-                """;
+                """, url, thumbnailUrl);
+        }
 
-
-        public static final String MESSAGE = """
+        public static String message(String iconUrl, String url, String filename, String filesize) {
+            return String.format("""
                 <div class=chatlog__attachment>
                     <div class="" onclick="">
                         <div class="">
                             <div class="chatlog__attachment-container">
-                                <img src="{{ATTACH_ICON}}" class="chatlog__attachment-icon">
+                                <img src="%s" class="chatlog__attachment-icon">
                                 <div class="chatlog__attachment-filename">
-                                    <a href={{ATTACH_URL}}>{{ATTACH_FILE}}</a>
+                                    <a href=%s>%s</a>
                                 </div>
                                 <div class="chatlog__attachment-filesize">
-                                    {{ATTACH_BYTES}}
+                                    %s
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                """;
+                """, iconUrl, url, filename, filesize);
+        }
 
-        public static final String VIDEO = """
+        public static String video(String url) {
+            return String.format("""
                 <div class=chatlog__attachment>
-                  <video class=chatlog__attachment-thumbnail src={{ATTACH_URL}} controls>Video</video>
+                  <video class=chatlog__attachment-thumbnail src="%s" controls>Video</video>
                 </div>
-                """;
+                """, url);
+        }
     }
 }
