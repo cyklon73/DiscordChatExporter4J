@@ -1,6 +1,5 @@
 package de.cyklon.discordchatexporter;
 
-import javax.crypto.Cipher;
 import java.awt.*;
 
 public final class DiscordHtml {
