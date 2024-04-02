@@ -246,6 +246,15 @@ public final class DiscordHtml {
                         unicode-bidi: bidi-override;
                     }
                         
+                    .chatlog__short-timestamp-constant {
+                        display: inline-block;
+                        color: #a3a6aa;
+                        font-size: 0.75rem;
+                        font-weight: 500;
+                        direction: ltr;
+                        unicode-bidi: bidi-override;
+                    }
+                        
                     .chatlog__message-primary {
                         grid-column: 2;
                         min-width: 0;
@@ -492,17 +501,21 @@ public final class DiscordHtml {
                         font-size: 0.875em;
                         font-weight: 600;
                     }
+                    
+                    .chatlog__embed-author-name-container:hover {
+                       text-decoration: none;
+                    }
                         
                     .chatlog__embed-title {
                         margin-bottom: 0.2em;
-                        font-size: 0.875em;
+                        font-size: 1em;
                         font-weight: 600;
                     }
                         
                     .chatlog__embed-description {
                         font-weight: 500;
                         font-size: 0.85em;
-                        color: rgba(255, 255, 255, 0.6);
+                        color: rgba(255, 255, 255, 0.9);
                     }
                         
                     .chatlog__embed-fields {
@@ -576,18 +589,29 @@ public final class DiscordHtml {
                     }
                         
                     .chatlog__component-button {
+                        position: relativ;
                         display: flex;
                         align-items: center;
-                        margin: 0.35em 0.1em 0.1em 0.1em;
-                        padding: 0.2em 0.35em;
-                        border-radius: 2px;
+                        justify-content: center;
+                        box-sizing: border-box;
+                        background: none;
+                        border: none;
+                        border-radius: 3px;
+                        margin: 4px 8px 4px 0;
+                        padding: 2px 8px;
+                        width: fit-content;
+                        block-size: fit-content;
+                        line-height: 28px;
+                        -webkit-user-select: none;
+                        -moz-user-select: none;
+                        user-select: none;
                     }
                         
                     .chatlog__button-label {
                         min-width: 9px;
                         margin-left: 0.35em;
                         margin-right: 0.35em;
-                        font-size: 0.875em;
+                        font-size: 14px;
                         color: white;
                         font-weight: 500;
                     }
@@ -601,12 +625,14 @@ public final class DiscordHtml {
                     }
                         
                     .chatlog__reaction {
-                        display: flex;
+                        display: inline-block;
                         align-items: center;
                         margin: 0.35em 0.1em 0.1em 0.1em;
                         padding: 0.2em 0.35em;
                         border-radius: 8px;
                         background-color: rgba(255, 255, 255, 0.05);
+                        width: fit-content;
+                        block-size: fit-content;
                     }
                         
                     .chatlog__reaction-count {
@@ -898,7 +924,8 @@ public final class DiscordHtml {
                     .main {
                         display: flex;
                         overflow-y: auto;
-                        height: calc(100% - 126px);
+                        overflow-x: hidden;
+                        height: 100%;
                         flex-direction: column;
                     }
                         
@@ -1163,7 +1190,7 @@ public final class DiscordHtml {
                       width: 400px;
                       margin-top: 5px;
                       position: relative;
-                      display: inline-block;
+                      display: block;
                     }
                         
                     .chatlog__dropdown-content {
@@ -1265,8 +1292,8 @@ public final class DiscordHtml {
             """;
 
     public static String base(String serverName, String channelName, String channelTopic, String subject, String messages,
-                              String dateTime, String serverAvatarUrl, long guildId, long channelId, String channelCreatedAt,
-                              int messageCount, String messageParticipants, String sd, String metaData, String fancyTime) {
+                              String dateTimeTooltip, String dateTime, String serverAvatarUrl, long guildId, long channelId,
+                              String channelCreatedAt, int messageCount, String messageParticipants, String sd, String metaData, String fancyTime) {
         return String.format("""           
                 <!DOCTYPE html>
                 <html lang="en">
@@ -1383,7 +1410,11 @@ public final class DiscordHtml {
                 </div>
                             
                 <div class="footer">
-                    <span class="footer__text">This transcript was generated on %s</span>
+                    <span class="footer__text">This transcript was generated on 
+                        <span class="unix-timestamp" data-timestamp="%s">
+                            %s
+                        </span>
+                    </span>
                 </div>
                             
                 <div id="context-menu">
@@ -1585,6 +1616,13 @@ public final class DiscordHtml {
                         animation: 'fade',
                         content: (reference) => reference.getAttribute('data-timestamp'),
                         theme: 'disc',
+                        
+                    });                            
+                    tippy('.chatlog__short-timestamp-constant', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('data-timestamp'),
+                        theme: 'disc',
                     });
                             
                     tippy('.chatlog__reference-edited-timestamp', {
@@ -1601,14 +1639,22 @@ public final class DiscordHtml {
                         content: (reference) => reference.getAttribute('data-timestamp'),
                         theme: 'disc',
                     });
+                    
+                    <!-- Verified bot tooltip -->
+                    tippy('.botTagVerified', {
+                        placement: 'top',
+                        animation: 'fade',
+                        content: (reference) => reference.getAttribute('aria-label'),
+                        theme: 'disc',
+                    });
                             
                     %s
                 </script>
                             
                 </body>
                 </html>
-                """, serverName, channelName, style, channelName, channelTopic, channelName, subject, messages,
-                dateTime, serverAvatarUrl, serverName, guildId, channelId, channelCreatedAt, messageCount,
+                """, serverName, channelName, style, channelName + "   -", "-   " + channelTopic, channelName, subject, messages,
+                dateTimeTooltip, dateTime, serverAvatarUrl, serverName, guildId, channelId, channelCreatedAt, messageCount,
                 messageParticipants, sd, metaData, fancyTime);
     }
 
@@ -1622,6 +1668,12 @@ public final class DiscordHtml {
 
         public static String channelTopic(String channelTopic) {
             return String.format("<span class=\"panel__channel-topic\">%s</span>", channelTopic);
+        }
+
+        public static String timestamp(String fullTimestamp, String simpleTimestamp) {
+            return String.format("""
+                    <div class="chatlog__short-timestamp-constant" data-timestamp="%s">%s</div>
+                    """, fullTimestamp, simpleTimestamp);
         }
 
         public static String fancyTime(String timezone) {
@@ -1683,24 +1735,34 @@ public final class DiscordHtml {
 
         private Message() {}
 
-        public static String botTagVerified(String emoji, int emojiCount) {
+        public static String systemTag() {
+            String systemSvg = """
+                    <svg aria-label="System Message" class="botTagVerified" aria-hidden="false" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M18.7 7.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4l3.3 3.29 7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" class=""></path></svg>
+                    """;
+            return tag(systemSvg, "SYSTEM");
+        }
+
+        public static String botTag(boolean verified) {
+            String verifiedSvg = """
+                    <svg aria-label="Verified Bot" class="botTagVerified" aria-hidden="false" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M18.7 7.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4l3.3 3.29 7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" class=""></path></svg>
+                    """;
+            return tag(verified ? verifiedSvg : "", "BOT");
+        }
+
+        private static String tag(String icon, String text) {
             return String.format("""
-                <div class=chatlog__reaction>
+                <span class="chatlog__bot-tag">
                     %s
-                    <span class="chatlog__reaction-count">%s</span>
-                </div>
-                """, emoji, emojiCount);
+                    %s
+                </span>
+            """, icon, text);
         }
 
-        public static String botTag() {
-            return "<span class=\"chatlog__bot-tag\">BOT</span>";
-        }
-
-        public static String content(String messageContent, String edit) {
+        public static String content(String messageContent, boolean edit) {
             return String.format("""
                 <span class="chatlog__markdown-preserve">%s</span>
                 %s
-                """, messageContent, edit);
+                """, messageContent, edit ? "Edited" : "");
         }
 
         public static String end() {
@@ -1735,13 +1797,16 @@ public final class DiscordHtml {
                                                 %s
                                 
                                                 %s
-                                
+                                                
                                                 %s
-                                
-                                                %s
-                                
-                                                %s
-                                
+                                                
+                                                <div class="chatlog__components">
+                                                    %s
+                                                </div>
+                                                
+                                                <div class="chatlog__reactions">
+                                                    %s
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1832,9 +1897,9 @@ public final class DiscordHtml {
                 """;
         }
 
-        public static String start(long messageId, String referenceSymbol, String avatarUrl, long userId, String reference, String nameTag,
-                                   Color userColor, String name, String userIcon, String botTag, String timestamp, String defaultTimestamp,
-                                   String messageContent, String attachments, String embeds, String components, String emoji) {
+        public static String start(long messageId, String referenceSymbol, String avatarUrl, long userId, String reference,
+                                   String name, String botTag, String timestamp, String defaultTimestamp, String messageContent,
+                                   String attachments, String embeds, String components, String emoji) {
             return String.format("""
                 <div class="chatlog__message-group">
                     <div id="chatlog__message-container-%s" class="chatlog__message-container" data-message-id="%s">
@@ -1846,7 +1911,7 @@ public final class DiscordHtml {
                             <div class="chatlog__message-primary">
                                 %s
                                 <div class="chatlog__header">
-                                    <span class="chatlog__author-name" title="%s" data-user-id="%s" style="%s">%s%s</span>
+                                    <span class="chatlog__author-name" title="%s" data-user-id="%s">%s</span>
                                     %s
                                     <span class="chatlog__timestamp" data-timestamp="%s">%s</span>
                                 </div>
@@ -1855,18 +1920,22 @@ public final class DiscordHtml {
                                     %s
                                 
                                     %s
-                                
+                                    
                                     %s
                                 
-                                    %s
-                                
-                                    %s
+                                    <div class="chatlog__components">
+                                        %s
+                                    </div>
+                                    
+                                    <div class="chatlog__reactions">
+                                        %s
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                """, messageId, messageId, referenceSymbol, avatarUrl, userId, reference, nameTag, userId, color(userColor),
-                    name, userIcon, botTag, timestamp, defaultTimestamp, messageId, messageId, messageContent, attachments, embeds, components, emoji);
+                """, messageId, messageId, "", avatarUrl, userId, reference, name, userId,
+                    name, botTag, timestamp, defaultTimestamp, messageId, messageId, messageContent, attachments, embeds, components, emoji);
         }
 
         public static String thread(long messageId, String threadUrl, String nameTag, Color userColor, String name, String threadName) {
@@ -1941,23 +2010,29 @@ public final class DiscordHtml {
 
     public static final class Embed {
 
+        private static long elementId = 0;
+
         private Embed() {}
 
-        public static String author(String name) {
+        public static String author(String iconUrl, String name, String url) {
+            long id = elementId++;
+            String style = url==null ? "" : String.format("""
+                    <style>
+                        #embed_%s .chatlog__embed-author-name:hover {
+                            text-decoration: underline;
+                        }
+                    </style>
+                    """, id);
+            String icon = iconUrl==null ? "" : String.format("""
+                    <img class="chatlog__embed-author-icon" src="%s" alt="Author Icon">
+                    """, iconUrl);
             return String.format("""
-                <div class="chatlog__embed-author">
-                                    <span class="chatlog__embed-author-name">%s</span>
+                <div class="chatlog__embed-author" id="embed_%s">
+                                    %s
+                                    %s
+                                    <a %s target="_blank" class="chatlog__embed-author-name-container"><span class="chatlog__embed-author-name">%s</span></a>
                 </div>
-                """, name);
-        }
-
-        public static String authorIcon(String iconUrl, String name) {
-            return String.format("""
-                <div class="chatlog__embed-author">
-                                    <img class="chatlog__embed-author-icon" src="%s" alt="Author Icon">
-                                    <span class="chatlog__embed-author-name">%s</span>
-                </div>
-                """, iconUrl, name);
+                """, id, style, icon, url==null ? "" : String.format("href=\"%s\"", url), name);
         }
 
         public static String body(Color color, String author, String title, String description, String fields, String image, String thumbnail, String footer) {
@@ -2047,12 +2122,30 @@ public final class DiscordHtml {
                 """, thumbnailUrl, thumbnailUrl);
         }
 
-        public static String title(String title) {
+        public static String title(String title, String url) {
+            long id = elementId++;
+            String style = url==null ? String.format("""
+                    #embed_%s .chatlog__embed-author-name-container span {
+                            text-decoration: none;
+                            color: #ffffff;
+                        }
+                    """, id) : String.format("""
+                         #embed_%s .chatlog__embed-author-name-container span:hover {
+                            text-decoration: none;
+                            color: rgba(0, 150, 198, 1);
+                        }
+                        #embed_%s .chatlog__embed-author-name-container span:hover {
+                            text-decoration: underline;
+                        }
+                    """, id, id);
             return String.format("""
-                <div class="chatlog__embed-title">
-                        <span class="markdown">%s</span>
+                <div class="chatlog__embed-title" id="embed_%s">
+                        <style>
+                            %s
+                        </style>
+                        <a %s target="_blank" class="chatlog__embed-author-name-container"><span class="markdown">%s</span></a>
                 </div>
-                """, title);
+                """, id, style, url==null ? "" : String.format("href=\"%s\"", url), title);
         }
     }
 
@@ -2060,25 +2153,38 @@ public final class DiscordHtml {
 
         private Component() {}
 
-        public static String button(boolean disabled, Color color, String url, String emoji, String label, String icon) {
+        public static String button(boolean disabled, String id, Color color, Color hoverColor, Color disabledColor, String url, String emoji, String label) {
+            if (disabled) {
+                color = disabledColor;
+                hoverColor = disabledColor;
+            }
             return String.format("""
-                <div class="chatlog__component-button %s" style=background-color:%s>
-                    <a href="%s" style=text-decoration:none>
-                    <span class="chatlog__button-label">%s%s%s</span>
+                <style>
+                    #chatlog__component-button_%s {
+                        background-color: %s;
+                    }
+                    #chatlog__component-button_%s:hover {
+                        background-color: %s;
+                    }
+                </style>
+                <div class="chatlog__component-button" %s id="chatlog__component-button_%s"">
+                    <a %s target="_blank" style=text-decoration:none>
+                    <span class="chatlog__button-label">%s %s</span>
                     </a>
                 </div>
-                """, disabled(disabled), color(color), url, emoji, label, icon);
+                """, id, color(color), id, color(hoverColor), disabled(disabled), id, disabled ? "" : (String.format("href=\"%s\"", url)), emoji, label);
         }
 
         public static String menu(boolean disabled, String id, String placeholder, String icon, String content) {
-            return String.format("""
+            return "";
+            /*return String.format("""
                 <div class="chatlog__component-dropdown %s">
                   <button onclick="showDropdown(%s)" class="dropdownButton" id="dropdownButton%s">%s %s</button>
                   <div id="dropdownMenuContent%s">
                     %s
                   </div>
                 </div>
-                """, disabled(disabled), id, id, placeholder, icon, id, content);
+                """, disabled(disabled), id, id, placeholder, icon, id, content);*/
         }
 
         public static String menuOptions(String title, String description) {
@@ -2113,13 +2219,13 @@ public final class DiscordHtml {
 
         private Attachment() {}
 
-        public static String audio(String iconUrl, String url, String filename, String filesize) {
+        public static String audio(String url, String filename, String filesize) {
             return String.format("""
                 <div class=chatlog__attachment>
                     <div class="" onclick="">
                         <div class="">
                             <div class="chatlog__attachment-audio-container">
-                                <img src="%s" class="chatlog__attachment-icon">
+                                <img src="https://raw.githubusercontent.com/cyklon73/DiscordChatExporter4J/master/assets/audio.png" class="chatlog__attachment-icon">
                                 <div class="chatlog__attachment-filename">
                                     <a href=%s>%s</a>
                                 </div>
@@ -2133,18 +2239,18 @@ public final class DiscordHtml {
                         </div>
                     </div>
                 </div>
-                """, iconUrl, url, filename, filesize, url, filename);
+                """, url, filename, filesize, url, filename);
         }
 
-        public static String image(String url, String thumbnailUrl) {
+        public static String image(String url, String thumbnailUrl, String filename) {
             return String.format("""
                 <div class=chatlog__attachment>
-                    <a href=%s><img class=chatlog__attachment-thumbnail src=%s></a>
+                    <a href=%s><img class=chatlog__attachment-thumbnail alt="%s" src="%s"></a>
                 </div>
-                """, url, thumbnailUrl);
+                """, url, filename, thumbnailUrl);
         }
 
-        public static String message(String iconUrl, String url, String filename, String filesize) {
+        private static String msg(String icon, String url, String filename, String filesize) {
             return String.format("""
                 <div class=chatlog__attachment>
                     <div class="" onclick="">
@@ -2161,15 +2267,43 @@ public final class DiscordHtml {
                         </div>
                     </div>
                 </div>
-                """, iconUrl, url, filename, filesize);
+                """, icon, url, filename, filesize);
         }
 
-        public static String video(String url) {
+        public static String message(String url, String filename, String filesize) {
+            return msg("https://raw.githubusercontent.com/cyklon73/DiscordChatExporter4J/master/assets/message.png", url, filename, filesize);
+        }
+
+        public static String code(String url, String filename, String filesize) {
+            return msg("https://raw.githubusercontent.com/cyklon73/DiscordChatExporter4J/master/assets/code.png", url, filename, filesize);
+        }
+
+        public static String video(String url, String filename) {
             return String.format("""
                 <div class=chatlog__attachment>
-                  <video class=chatlog__attachment-thumbnail src="%s" controls>Video</video>
+                  <video class=chatlog__attachment-thumbnail src="%s" controls>%s</video>
                 </div>
-                """, url);
+                """, url, filename);
+        }
+
+        public static String unknown(String url, String filename, String filesize) {
+            return String.format("""
+                <div class=chatlog__attachment>
+                    <div class="" onclick="">
+                        <div class="">
+                            <div class="chatlog__attachment-container">
+                                <img src="https://raw.githubusercontent.com/cyklon73/DiscordChatExporter4J/master/assets/file.png" class="chatlog__attachment-icon">
+                                <div class="chatlog__attachment-filename">
+                                    <a href=%s>%s</a>
+                                </div>
+                                <div class="chatlog__attachment-filesize">
+                                    %s
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, url, filename, filesize);
         }
     }
 }
