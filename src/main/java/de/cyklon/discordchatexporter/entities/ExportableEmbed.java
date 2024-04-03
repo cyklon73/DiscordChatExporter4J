@@ -61,6 +61,9 @@ public interface ExportableEmbed {
 
 		String getContent();
 
+		/**
+		 * @return null if no timestamp is defined
+		 */
 		OffsetDateTime getTimestamp();
 
 		/**
