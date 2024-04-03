@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +44,9 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 			avatarUrl = user.getAvatarUrl();
 		}
 		if (avatarUrl==null) avatarUrl = DiscordExporter.getAvatarById(id);
-		return new ChannelImpl(name, id, "", "", new ArrayList<>(), createdAt, new GuildImpl(name, id, avatarUrl));
+		return new ChannelImpl(name, id, "", "",  MessageHistory.getHistoryFromBeginning(channel).complete().getRetrievedHistory().stream()
+				.map(this::ofMessage)
+				.toList(), createdAt, new GuildImpl(name, id, avatarUrl));
 	}
 
 	@Override
@@ -53,7 +54,9 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 		String topic = "";
 		if (channel instanceof StandardGuildMessageChannel tc) topic = tc.getTopic();
 		if (topic==null) topic = "";
-		return new ChannelImpl(channel.getName(), channel.getIdLong(), topic, topic, new ArrayList<>(), channel.getTimeCreated(), ofGuild(channel.getGuild()));
+		return new ChannelImpl(channel.getName(), channel.getIdLong(), topic, topic, MessageHistory.getHistoryFromBeginning(channel).complete().getRetrievedHistory().stream()
+				.map(this::ofMessage)
+				.toList(), channel.getTimeCreated(), ofGuild(channel.getGuild()));
 	}
 
 	@Override
