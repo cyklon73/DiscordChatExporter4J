@@ -320,7 +320,7 @@ final class Discord4JWrapper implements APIWrapper<PrivateChannel, GuildMessageC
 
 			@Override
 			public String getEmojiFile() {
-				return reaction.getEmoji().asCustomEmoji().isPresent() ? reaction.getEmoji().asCustomEmoji().get().getId().asString() : null
+				return reaction.getEmoji().asCustomEmoji().isPresent() ? reaction.getEmoji().asCustomEmoji().get().getId().asString() : null;
 			}
 
 			@Override
