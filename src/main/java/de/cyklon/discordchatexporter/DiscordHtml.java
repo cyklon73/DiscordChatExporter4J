@@ -2079,7 +2079,7 @@ public final class DiscordHtml {
 
         public static String field(String name, String value, boolean inline) {
             return String.format("""
-                <div class="chatlog__embed-field  chatlog__embed-field%s">
+                <div class="chatlog__embed-field%s">
                         <div class="chatlog__embed-field-name"><span class="markdown preserve-whitespace">%s</span></div>
                         <div class="chatlog__embed-field-value"><span class="markdown preserve-whitespace">%s</span></div>
                 </div>
