@@ -12,6 +12,10 @@ import net.dv8tion.jda.api.interactions.components.Component;
 
 public interface APIWrapper<PC, GC, G, A, C, E, M, U, R, EA, EF, EFO> {
 
+	static APIWrapper<byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[]> data() {
+		return DataWrapper.instance;
+	}
+
 	static APIWrapper<PrivateChannel, GuildMessageChannel, Guild, Message.Attachment, Component, MessageEmbed, Message, User, MessageReaction, MessageEmbed.AuthorInfo, MessageEmbed.Field, MessageEmbed.Footer> JDA() {
 		return JDAWrapper.instance;
 	}
