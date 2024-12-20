@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
-final class Discord4JWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel, Guild, Attachment, MessageComponent, Embed, Message, User, Reaction, Embed.Author, Embed.Field, Embed.Footer> {
+final class Discord4JWrapper extends Wrapper implements APIWrapper<PrivateChannel, GuildMessageChannel, Guild, Attachment, MessageComponent, Embed, Message, User, Reaction, Embed.Author, Embed.Field, Embed.Footer> {
 
 	static final Discord4JWrapper instance = new Discord4JWrapper();
 
@@ -109,25 +109,6 @@ final class Discord4JWrapper implements APIWrapper<PrivateChannel, GuildMessageC
 		};
 	}
 
-	private ExportableEmbed.Author dummyAuthor() {
-		return new ExportableEmbed.Author() {
-			@Override
-			public String getName() {
-				return "";
-			}
-
-			@Override
-			public String getUrl() {
-				return null;
-			}
-
-			@Override
-			public String getIconUrl() {
-				return null;
-			}
-		};
-	}
-
 	@Override
 	public ExportableEmbed.Author ofEmbedAuthor(Embed.Author author) {
 		return new ExportableEmbed.Author() {
@@ -164,25 +145,6 @@ final class Discord4JWrapper implements APIWrapper<PrivateChannel, GuildMessageC
 			@Override
 			public boolean isInline() {
 				return field.isInline();
-			}
-		};
-	}
-
-	private ExportableEmbed.Footer dummyFooter() {
-		return new ExportableEmbed.Footer() {
-			@Override
-			public String getContent() {
-				return "";
-			}
-
-			@Override
-			public OffsetDateTime getTimestamp() {
-				return null;
-			}
-
-			@Override
-			public String getIconUrl() {
-				return null;
 			}
 		};
 	}
