@@ -137,7 +137,7 @@ public final class DiscordExporter {
 		}
 
 		return base(guild.getName(), channel.getName(), channel.getTopic(), channel.getSubject(), messagesHtml.toString(),
-				dateTimeTooltip, dateTime, guild.getIconUrl(), guild.geID(), channel.getID(), createdAt,
+				dateTimeTooltip, dateTime, guild.getIconUrl(), guild.getId(), channel.getID(), createdAt,
 				messages.size(), "", "", "", "");
 	}
 
