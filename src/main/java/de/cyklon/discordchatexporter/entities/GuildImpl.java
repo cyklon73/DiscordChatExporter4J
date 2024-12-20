@@ -7,7 +7,7 @@ public record GuildImpl(String name, long id, String iconUrl) implements Exporta
 	}
 
 	@Override
-	public long geID() {
+	public long getId() {
 		return id;
 	}
 
