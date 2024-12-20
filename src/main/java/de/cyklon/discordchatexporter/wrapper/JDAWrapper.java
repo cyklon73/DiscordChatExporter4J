@@ -13,19 +13,17 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
-final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel, Guild, Message.Attachment, Component, MessageEmbed, Message, User, MessageReaction, MessageEmbed.AuthorInfo, MessageEmbed.Field, MessageEmbed.Footer> {
+final class JDAWrapper extends Wrapper implements APIWrapper<PrivateChannel, GuildMessageChannel, Guild, Message.Attachment, Component, MessageEmbed, Message, User, MessageReaction, MessageEmbed.AuthorInfo, MessageEmbed.Field, MessageEmbed.Footer> {
 
 	static final JDAWrapper instance = new JDAWrapper();
 
 	private JDAWrapper() {}
-
-	private String nonNull(String s) {
-		return Objects.requireNonNullElse(s, "");
-	}
 
 	@Override
 	public ExportableChannel ofPrivateChannel(PrivateChannel channel) {
@@ -44,9 +42,21 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 			avatarUrl = user.getAvatarUrl();
 		}
 		if (avatarUrl==null) avatarUrl = DiscordExporter.getAvatarById(id);
-		return new ChannelImpl(name, id, "", "",  MessageHistory.getHistoryFromBeginning(channel).complete().getRetrievedHistory().stream()
-				.map(this::ofMessage)
-				.toList(), createdAt, new GuildImpl(name, id, avatarUrl));
+
+		List<ExportableMessage> msg;
+		try {
+			msg = new java.util.ArrayList<>(channel.getIterableHistory().takeAsync(Integer.MAX_VALUE)
+					.thenApply(ArrayList::new).get()
+					.stream()
+					.map(this::ofMessage)
+					.toList());
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+
+		Collections.reverse(msg);
+
+		return new ChannelImpl(name, id, "", "",  msg, createdAt, new GuildImpl(name, id, avatarUrl));
 	}
 
 	@Override
@@ -54,9 +64,21 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 		String topic = "";
 		if (channel instanceof StandardGuildMessageChannel tc) topic = tc.getTopic();
 		if (topic==null) topic = "";
-		return new ChannelImpl(channel.getName(), channel.getIdLong(), topic, topic, MessageHistory.getHistoryFromBeginning(channel).complete().getRetrievedHistory().stream()
-				.map(this::ofMessage)
-				.toList(), channel.getTimeCreated(), ofGuild(channel.getGuild()));
+
+		List<ExportableMessage> msg;
+		try {
+			msg = new java.util.ArrayList<>(channel.getIterableHistory().takeAsync(9999)
+					.thenApply(ArrayList::new).get()
+					.stream()
+					.map(this::ofMessage)
+					.toList());
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+
+		Collections.reverse(msg);
+
+		return new ChannelImpl(channel.getName(), channel.getIdLong(), topic, topic, msg, channel.getTimeCreated(), ofGuild(channel.getGuild()));
 	}
 
 	@Override
@@ -91,7 +113,7 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 		} else if (component instanceof SelectMenu menu) {
 			return ExportableComponent.Menu.impl(menu.getId(), menu.getPlaceholder(), "", Collections.emptyList(), menu.isDisabled());
 		}
-		return null;
+		return ExportableComponent.unknown();
 	}
 
 	@Override
@@ -99,12 +121,12 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 		return new ExportableEmbed() {
 			@Override
 			public Color getColor() {
-				return embed.getColor();
+				return nonNull(embed.getColor());
 			}
 
 			@Override
 			public Author getAuthor() {
-				return ofEmbedAuthor(embed.getAuthor());
+				return embed.getAuthor()==null ? dummyAuthor() : ofEmbedAuthor(embed.getAuthor());
 			}
 
 			@Override
@@ -114,12 +136,12 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 
 			@Override
 			public String getTitle() {
-				return embed.getTitle();
+				return nonNull(embed.getTitle());
 			}
 
 			@Override
 			public String getDescription() {
-				return embed.getDescription();
+				return nonNull(embed.getDescription());
 			}
 
 			@Override
@@ -141,7 +163,7 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 
 			@Override
 			public Footer getFooter() {
-				return ofEmbedFooter(embed, embed.getFooter());
+				return embed.getFooter()==null ? dummyFooter() : ofEmbedFooter(embed, embed.getFooter());
 			}
 		};
 	}
@@ -289,7 +311,7 @@ final class JDAWrapper implements APIWrapper<PrivateChannel, GuildMessageChannel
 
 			@Override
 			public Color getColor() {
-				return user.retrieveProfile().complete().getAccentColor();
+				return Objects.requireNonNullElse(user.retrieveProfile().complete().getAccentColor(), Color.BLACK);
 			}
 
 			@Override
