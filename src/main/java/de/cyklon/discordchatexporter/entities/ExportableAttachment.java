@@ -1,8 +1,9 @@
 package de.cyklon.discordchatexporter.entities;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
-public interface ExportableAttachment {
+public interface ExportableAttachment extends SerializableEntity {
 
 	String getUrl();
 
@@ -10,9 +11,32 @@ public interface ExportableAttachment {
 
 	int getSize(); //in bytes
 
+	@Override
+	default long getSerialId() {
+		return 0;
+	}
+
+	@Override
+	default byte[] getBytes() {
+		byte[] url = getUrl().getBytes();
+		byte[] filename = getFileName().getBytes();
+
+		ByteBuffer buffer = ByteBuffer.allocate(8 + 4 + url.length + 4 + filename.length + 4);
+
+		buffer.putLong(getSerialId());
+
+		put(buffer, url);
+
+		put(buffer, filename);
+
+		buffer.putInt(getSize());
+		return buffer.array();
+	}
+
 	interface Unknown extends ExportableAttachment {
 		static Unknown impl(String url, String fileName, int size) {
 			return new Unknown() {
+
 				@Override
 				public String getFileName() {
 					return fileName;
@@ -43,6 +67,11 @@ public interface ExportableAttachment {
 			return new Audio() {
 
 				@Override
+				public long getSerialId() {
+					return 1;
+				}
+
+				@Override
 				public String getUrl() {
 					return url;
 				}
@@ -66,6 +95,11 @@ public interface ExportableAttachment {
 		static Image impl(String url, String filename, int size) {
 			return new Image() {
 				@Override
+				public long getSerialId() {
+					return 2;
+				}
+
+				@Override
 				public String getFileName() {
 					return filename;
 				}
@@ -88,7 +122,6 @@ public interface ExportableAttachment {
 		}
 
 		String getThumbnailUrl();
-
 	}
 
 	interface Message extends ExportableAttachment {
@@ -101,6 +134,11 @@ public interface ExportableAttachment {
 
 		static Message impl(String url, String fileName, int size) {
 			return new Message() {
+				@Override
+				public long getSerialId() {
+					return 3;
+				}
+
 				@Override
 				public String getFileName() {
 					return fileName;
@@ -131,6 +169,11 @@ public interface ExportableAttachment {
 		static Code impl(String url, String fileName, int size) {
 			return new Code() {
 				@Override
+				public long getSerialId() {
+					return 4;
+				}
+
+				@Override
 				public String getFileName() {
 					return fileName;
 				}
@@ -152,6 +195,11 @@ public interface ExportableAttachment {
 
 		static Video impl(String url, String filename, int size) {
 			return new Video() {
+				@Override
+				public long getSerialId() {
+					return 5;
+				}
+
 				@Override
 				public String getUrl() {
 					return url;

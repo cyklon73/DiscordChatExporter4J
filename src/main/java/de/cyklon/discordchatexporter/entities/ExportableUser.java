@@ -1,11 +1,12 @@
 package de.cyklon.discordchatexporter.entities;
 
 import java.awt.*;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
-public interface ExportableUser {
+public interface ExportableUser extends SerializableEntity {
 
 	long getId();
 
@@ -23,13 +24,65 @@ public interface ExportableUser {
 
 	List<Flag> getFlags();
 
+	@Override
+	default long getSerialId() {
+		return 19;
+	}
+
+	@Override
+	default byte[] getBytes() {
+		List<Flag> fl = getFlags();
+
+		byte[] avatarUrl = getAvatarUrl().getBytes();
+		byte[] name = getName().getBytes();
+		byte[] displayName = getDisplayName().getBytes();
+		int color = getColor().getRGB();
+		byte[][] flags = new byte[fl.size()][];
+
+		int flagsLen = 0;
+		for (int i = 0; i < flags.length; i++) {
+			flags[i] = fl.get(i).getBytes();
+			flagsLen += 4 + flags[i].length;
+		}
+
+		ByteBuffer flagBuffer = ByteBuffer.allocate(flagsLen);
+		for (byte[] flag : flags) {
+			put(flagBuffer, flag);
+		}
+
+		flagBuffer.flip();
+
+
+		ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + avatarUrl.length + 4 + name.length + 4 + displayName.length + 4 + 1 + 1 + 4 + flagBuffer.limit());
+
+		buffer.putLong(getSerialId());
+
+		buffer.putLong(getId());
+
+		put(buffer, avatarUrl);
+
+		put(buffer, name);
+
+		put(buffer, displayName);
+
+		buffer.putInt(color);
+
+		put(buffer, isBot());
+
+		put(buffer, isSystem());
+
+		buffer.putInt(flagBuffer.limit());
+		buffer.put(flagBuffer);
+
+		return buffer.array();
+	}
 
 	/**
 	 * This enum was implemented by <a href="https://github.com/discord-jda/JDA">JDA</a>
 	 * <p>
 	 * Represents the bit offsets used by Discord for public flags
 	 */
-	enum Flag
+	enum Flag implements SerializableEntity
 	{
 		STAFF(0, "Discord Employee"),
 		PARTNER(1, "Partnered Server Owner"),
@@ -73,6 +126,22 @@ public interface ExportableUser {
 			this.offset = offset;
 			this.raw = 1 << offset;
 			this.name = name;
+		}
+
+		@Override
+		public long getSerialId() {
+			return 20;
+		}
+
+		@Override
+		public byte[] getBytes() {
+			ByteBuffer buffer = ByteBuffer.allocate(8 + 4);
+
+			buffer.putLong(getSerialId());
+
+			buffer.putInt(offset);
+
+			return buffer.array();
 		}
 
 		/**
