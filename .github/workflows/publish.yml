@@ -21,7 +21,7 @@ jobs:
       with:
         arguments: build
     - name: Publish with gradle
-      run: ./gradlew publish
+      run: chmod +x gradlew && ./gradlew publish
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_NAME }}
         MAVEN_SECRET: ${{ secrets.MAVEN_SECRET }}
