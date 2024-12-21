@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-  implementation "de.cyklon:DiscordChatExporter4J:VERSION"
+  implementation "de.cyklon:DiscordChatExporter:VERSION"
 }
 ```
 
@@ -35,7 +35,7 @@ dependencies {
 <dependencies>
   <dependency>
     <groupId>de.cyklon</groupId>
-    <artifactId>DiscordChatExporter4J</artifactId>
+    <artifactId>DiscordChatExporter</artifactId>
     <version>VERSION</version>
   </dependency>
 </dependencies>
