@@ -1,9 +1,13 @@
 plugins {
-    id("java")
+    id 'java'
+    id 'maven-publish'
 }
 
 group = "de.cyklon"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
+
+var commit = getCommit()
+var release = System.getenv("RELEASE") == "true"
 
 repositories {
     mavenCentral()
@@ -17,6 +21,45 @@ dependencies {
     implementation 'org.javacord:javacord:3.8.0'
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    repositories {
+        maven {
+            url = "https://maven.cyklon.dev/" + (release ? "releases" : "snapshots")
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_SECRET")
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            groupId = "de.cyklon"
+            artifactId = "DiscordChatExporter"
+            version = release ? this.version : commit
+
+            from components.java
+        }
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }
+
+static String getCommit() {
+    try {
+        var commit = 'git rev-parse --verify --short HEAD'.execute().text.trim()
+        return commit.isEmpty() ? 'unknown' : commit
+    } catch(IOException e) {
+        throw new RuntimeException(e)
+    }
+}
+
